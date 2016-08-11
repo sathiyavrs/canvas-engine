@@ -104,13 +104,13 @@ function Transform(params)
 	var self = this;
 
 	self.position = new Vector(0, 0);
-	self.rotation = new Vector(0, 0);
+	self.rotation = 0;
 	self.scale = new Vector(0, 0);
 
 	function assign(params)
 	{
 		self.position.assign(params.position);
-		self.rotation.assign(params.rotation);
+		self.rotation = params.rotation;
 		self.scale.assign(params.scale);
 	}
 	self.assign = assign;
