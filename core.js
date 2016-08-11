@@ -133,46 +133,9 @@ function freeze_transform()
 	Object.freeze(Transform);
 }
 
-var game_object_id = 1;
-var game_obj_arr = [];
-
-function Game_Object(params)
-{
-	var self = this;
-	self.transform = new Transform(params);
-	self.id = game_object_id++;
-
-	function make_property_non_writable(property)
-	{
-		Object.defineProperty(self, property, { writable: false });
-	}
-	make_property_non_writable('id');
-	make_property_non_writable('transform');
-
-	game_obj_arr.push(self);
-}
-
-Game_Object.find_object_by_id(id)
-{
-	for (var obj in game_obj_arr)
-		if (obj.id == id)
-			return obj;
-}
-
-function freeze_game_object()
-{
-	for(var obj in Game_Object)
-		if (Game_Object.hasOwnProperty(obj))
-			if (typeof(Game_Object[id]) == "function")
-				Object.freeze(Game_Object[obj]);
-
-	Object.freeze(Game_Object);
-}
-
 function freeze_core_globals()
 {
 	freeze_vector();
 	freeze_transform();
-	freeze_game_object();
 }
 freeze_core_globals();
