@@ -1,9 +1,19 @@
 /*
  * TODO: start, update, and draw
+ * TODO: implement basic debug draw
  */ 
 var game_object_id = 1;
 var game_obj_arr = [];
 
+/*
+ * Game_Object is the base object in this engine.
+ * 
+ * The definition of Game_Object has to account for all types of implementations of the idea of the basic Game Object.
+ * This requirement imposes a necessity for this object to be very, very basic.
+ *
+ * Game Objects in most games form a tree-like structure. During rendering, for instance, the pre-order traversal of the tree is the rendering order.
+ * While I probably won't be doing that, I'll be incorporating a parent-child model to manifest the idea of the tree structure.
+ */
 function Game_Object(params)
 {
 	var self = this;
@@ -20,7 +30,11 @@ function Game_Object(params)
 	function parent_child_constructor()
 	{
 		if (params.parent)
+		{
+			// TODO: Check that params.parent is an instance of Game_Object
 			self.parent = params.parent;
+			self.parent.attach_child(self);
+		}
 
 		self.child_arr = [];
 	}
@@ -28,6 +42,12 @@ function Game_Object(params)
 
 	function attach_child(game_object)
 	{
+		if (game_object.parent && game_object.parent.id != self.id)
+			throw new error("Game Object child being attached to wrong parent");
+
+		if (!game_object.parent)
+			game_object.parent = self;
+
 		self.child_arr.push(game_object);
 	}
 	self.attach_child = attach_child;
@@ -51,6 +71,7 @@ function Game_Object(params)
 		return absolute_transform;
 	}
 	self.get_absolute_transform = get_absolute_transform;
+	make_property_non_writable('get_absolute_transform');
 
 	game_obj_arr.push(self);
 
