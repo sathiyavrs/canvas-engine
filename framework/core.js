@@ -1,6 +1,7 @@
 /*
  * Core contains core functionality used in all classes
- * Convenience is more important than rigidity */
+ * Convenience is more important than rigidity 
+ */
 
 function Vector(x, y)
 {

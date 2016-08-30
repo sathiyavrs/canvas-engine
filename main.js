@@ -39,11 +39,24 @@ function update()
 	var x = Math.random() * 200;
 	var y = Math.random() * 100;
 
-	ctx.beginPath();
-	ctx.moveTo(0, 0);
-	ctx.lineTo(x, y);
-	ctx.stroke();
-	ctx.closePath();
+	var a = new Vector(x, y);
+	debug_draw({
+		type: 'line',
+		start: new Vector(0, 0),
+		end: a
+	});
+
+	debug_draw({
+		type: 'circle',
+		center: new Vector(0, 0),
+		radius: 7	
+	});
+
+	debug_draw({
+		type: 'circle',
+		center: a,
+		radius: 5
+	});
 }
 
 window.requestAnimationFrame(reqAnimCb);
