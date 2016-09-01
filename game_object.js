@@ -1,6 +1,3 @@
-/*
- * TODO: start, update, and draw
- */ 
 var game_object_id = 1;
 var game_obj_arr = [];
 
@@ -75,10 +72,10 @@ function Game_Object(params)
 	game_obj_arr.push(self);
 
 	/*
-	 * Alright, now for the script system
+	 * Alright, now for the script system.
 	 *
 	 * Each object's behavior will be defined by the scripts that it runs.
-	 * The order of execution of the scripts is FIFO
+	 * The order of execution of the scripts is FIFO.
 	 */
 	var script_arr = [];
 
@@ -135,37 +132,41 @@ function Game_Object(params)
 	self.run_physics_cb = run_physics_cb;
 
 	/*
-	 * Run start, update, and draw methods individually for each of the children in preorder
+	 * Start and Update methods are standard in most game engines.
+	 *
+	 * Update takes in delta_time as a parameter.
 	 */
 	function start()
 	{
-		for (var prop in script_arr)
-			if (script_arr.hasOwnProperty(prop))
-				if (script_arr[prop].start)
-					script_arr[prop].start();
+		script_arr.forEach(function(script) {
+			if (script.start)
+				script.start();	
+		});
+
+		self.child_arr.forEach(function(child) {
+			child.start();	
+		});
 	}
 	self.start = start;
 	make_property_non_writable('start');
 
-	function update()
+	function update(dt)
 	{
-		for (var prop in script_arr)
-			if (script_arr.hasOwnProperty(prop))
-				if (script_arr[prop].start)
-					script_arr[prop].start();
+		script_arr.forEach(function(script) {
+			if (script.update)
+				script.update(dt);	
+		});
+
+		self.child_arr.forEach(function(child) {
+			child.update(dt);	
+		});
 	}
 	self.update = update;
 	make_property_non_writable('update');
 
-	function draw()
-	{
-		for (var prop in script_arr)
-			if (script_arr.hasOwnProperty(prop))
-				if (script_arr[prop].draw)
-					script_arr[prop].draw();
-	}
-	self.draw = draw;
-	make_property_non_writable('draw');
+	/*
+	 * TODO: Connection to rendering engine
+	 */
 }
 
 Game_Object.find_object_by_id = function(id)

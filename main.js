@@ -25,14 +25,21 @@ function reqAnimCb(timeStamp)
 	}
 
 	clearCanvas();
-	update();
+	update(dt);
 
 	window.requestAnimationFrame(reqAnimCb);
 }
 
+var scene = new Game_Object({
+	position: new Vector(0, 0),
+	rotation: 0,
+	scale: new Vector(1, 1)	
+});
+
 function basic_physics_test()
 {
 	var ball_1 = new Game_Object({
+		parent: scene,
 		position: new Vector(5, 0),
 		rotation: 0,
 		scale: new Vector(1, 1)	
@@ -40,7 +47,7 @@ function basic_physics_test()
 
 	var ball_2 = new Game_Object({
 		parent: ball_1,
-		position: new Vector(-5, 0),
+		position: new Vector(11, 0),
 		rotation: 0,
 		scale: new Vector(1, 1)	
 	});
@@ -69,10 +76,12 @@ function basic_physics_test()
 
 function init()
 {
+	scene.start();
 }
 
-function update()
+function update(dt)
 {
+	scene.update(dt);
 	Physics_World.Instance.check_collisions();
 }
 

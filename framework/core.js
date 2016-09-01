@@ -113,7 +113,7 @@ function Transform(params)
 
 	self.position = new Vector(0, 0);
 	self.rotation = 0;
-	self.scale = new Vector(0, 0);
+	self.scale = new Vector(1, 1);
 
 	function assign(params)
 	{
