@@ -1,6 +1,5 @@
 /*
  * TODO: start, update, and draw
- * TODO: implement basic debug draw
  */ 
 var game_object_id = 1;
 var game_obj_arr = [];
@@ -63,7 +62,7 @@ function Game_Object(params)
 		{
 			absolute_transform.position.add(parent.transform.position);
 			absolute_transform.rotation += parent.rotation;
-			absolute_transform.scale.add(parent.transform.scale);
+			absolute_transform.scale.simple_product(parent.transform.scale);
 
 			parent = parent.parent;
 		}
@@ -75,31 +74,95 @@ function Game_Object(params)
 
 	game_obj_arr.push(self);
 
+	/*
+	 * Alright, now for the script system
+	 *
+	 * Each object's behavior will be defined by the scripts that it runs.
+	 * The order of execution of the scripts is FIFO
+	 */
 	var script_arr = [];
 
-	function add_script(script)
+	function add_script(script, tag)
 	{
-		script_arr.push(script);
+		script.tag = tag;
+		script_add.push(script);
 	}
 	self.add_script = add_script;
 	make_property_non_writable('add_script');
 
+	function get_script_by_tag(tag)
+	{
+		for (var prop in script_arr)
+			if (script_arr.hasOwnProperty(prop))
+				if (script_arr[prop].tag == tag)
+					return script_arr[prop];
+	}
+
+	/*
+	 * Connection to the physics engine
+	 *
+	 * The physics engine represents the interaction between different game objects
+	 * 
+	 * As of now, the physics engine provides support only upto collision detection. I want to add support for raycasting soon.
+	 *
+	 * Each callback method takes in one parameter: the other game object involved in the collision
+	 * Callback execution order is in FIFO
+	 *
+	 * TODO: Implement multiple physics objects per game Object through pivots
+	 */
+
+	function add_physics_component(params)
+	{
+		params.game_object = self;
+		self.physics_object = new Physics_Object(params);
+	}
+	self.add_physics_component = add_physics_component;
+	make_property_non_writable('add_physics_component');
+
+	self.physics_cb_script_arr = [];
+	function add_physics_cb_script(cb)
+	{
+		self.physics_cb_script_arr.push(cb);
+	}
+	self.add_physics_cb_script = add_physics_cb_script;
+
+	function run_physics_cb(other)
+	{
+		self.physics_cb_script_arr.forEach(function(cb) {
+			cb(other);	
+		});
+	}
+	self.run_physics_cb = run_physics_cb;
+
+	/*
+	 * Run start, update, and draw methods individually for each of the children in preorder
+	 */
 	function start()
 	{
+		for (var prop in script_arr)
+			if (script_arr.hasOwnProperty(prop))
+				if (script_arr[prop].start)
+					script_arr[prop].start();
 	}
 	self.start = start;
 	make_property_non_writable('start');
 
 	function update()
 	{
+		for (var prop in script_arr)
+			if (script_arr.hasOwnProperty(prop))
+				if (script_arr[prop].start)
+					script_arr[prop].start();
 	}
 	self.update = update;
 	make_property_non_writable('update');
 
 	function draw()
 	{
-		if (!self.render)
-			return;
+		for (var prop in script_arr)
+			if (script_arr.hasOwnProperty(prop))
+				if (script_arr[prop].draw)
+					script_arr[prop].draw();
 	}
 	self.draw = draw;
 	make_property_non_writable('draw');

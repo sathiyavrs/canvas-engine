@@ -33,6 +33,13 @@ function Vector(x, y)
 	}
 	self.scalar_product = scalar_product;
 
+	function simple_product(a)
+	{
+		self.x *= a.x;
+		self.y *= a.y;
+	}
+	self.simple_product = simple_product;
+
 	function assign(a)
 	{
 		self.x = a.x;

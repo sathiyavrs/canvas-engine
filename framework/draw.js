@@ -15,7 +15,7 @@ function debug_draw(params)
 			break;
 
 		case 'circle':
-			fill_circle(params.center, params.radius);
+			circle(params.center, params.radius, params.fill);
 			break;
 	}
 	return;
@@ -43,7 +43,7 @@ function debug_draw(params)
 	/*
 	 * Draws a full circle with center A(x, y) and radius 'rad'.
 	 */
-	function fill_circle(a, rad, params)
+	function circle(a, rad, fill, params)
 	{
 		a = Utility.get_canvas_vector(a);
 
@@ -51,7 +51,12 @@ function debug_draw(params)
 		{
 			ctx.beginPath();
 			ctx.arc(a.x, a.y, rad, 0, 2 * Math.PI);
-			ctx.fill();
+
+			if (fill)
+				ctx.fill();
+			else
+				ctx.stroke();
+
 			ctx.closePath();
 			
 			return;
