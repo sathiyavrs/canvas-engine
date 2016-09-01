@@ -33,3 +33,48 @@ function get_canvas_vector(point)
 	return res;
 }
 Utility.get_canvas_vector = get_canvas_vector;
+
+/*
+ * The following functions are used in both physics.js and draw.js
+ */
+Utility.parse_dimensions = function(obj, params) {
+	obj.shape = params.shape;
+	switch (obj.shape)
+	{
+		case 'circle':
+			obj.radius = params.radius;
+			break;
+		
+		case 'rectangle':
+			obj.length = params.length;
+			obj.breadth = params.breadth;
+
+			break;
+	}
+}
+
+// For circles, only the x-value in scale will be considered
+Utility.get_real_dimensions = function(obj, params) {
+	return function() {
+		var abs_transform = obj.game_object.get_absolute_transform();
+		
+		var res = new Object();
+		res.position = new Vector(0, 0);
+		res.position.assign(abs_transform.position);
+		res.rotation = abs_transform.rotation;
+
+		switch (obj.shape)
+		{
+			case 'circle':
+				res.radius = obj.radius * abs_transform.scale.x;
+				break;
+
+			case 'rectangle':
+				res.length = obj.length * abs_transform.scale.x;
+				res.breadth = obj.breadth * abs_transform.scale.y;
+				break;
+		}
+
+		return res;
+	}
+}

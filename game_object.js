@@ -58,7 +58,7 @@ function Game_Object(params)
 		while (parent != undefined)
 		{
 			absolute_transform.position.add(parent.transform.position);
-			absolute_transform.rotation += parent.rotation;
+			absolute_transform.rotation += parent.transform.rotation;
 			absolute_transform.scale.simple_product(parent.transform.scale);
 
 			parent = parent.parent;
@@ -165,8 +165,31 @@ function Game_Object(params)
 	make_property_non_writable('update');
 
 	/*
-	 * TODO: Connection to rendering engine
+	 * The rendering system isn't fully separated from the game object system, like the physics system.
+	 * For simpler implementation of the preorder rendering system, it makes sense for the rendering to be controlled within the definition of the Game Object
+	 *
+	 * TODO: Implement multiple renderers per game_object
 	 */
+
+	function add_canvas_renderer(params)
+	{
+		params.game_object = self;
+		self.renderer = new Canvas_Renderer(params);
+	}
+	self.add_canvas_renderer = add_canvas_renderer;
+	make_property_non_writable('add_canvas_renderer');
+
+	function draw()
+	{
+		if (self.renderer)
+			self.renderer.render();
+
+		self.child_arr.forEach(function(child) {
+			child.draw();	
+		});
+	}
+	self.draw = draw;
+	make_property_non_writable('draw');
 }
 
 Game_Object.find_object_by_id = function(id)

@@ -119,45 +119,10 @@ function Physics_Object(params)
 	self.game_object = params.game_object;
 	self.id = phy_id++;
 
-	self.shape = params.shape;
-	switch (self.shape)
-	{
-		case 'circle':
-			self.radius = params.radius;
-			break;
-		
-		case 'rectangle':
-			self.length = params.length;
-			self.breadth = params.breadth;
-
-			break;
-	}
+	Utility.parse_dimensions(self, params);
 
 	// For circles, only the x-value in scale will be considered
-	function get_real_dimensions()
-	{
-		var abs_transform = self.game_object.get_absolute_transform();
-		
-		var res = new Object();
-		res.position = new Vector(0, 0);
-		res.position.assign(abs_transform.position);
-		res.rotation = abs_transform.rotation;
-
-		switch (self.shape)
-		{
-			case 'circle':
-				res.radius = self.radius * abs_transform.scale.x;
-				break;
-
-			case 'rectangle':
-				res.length = self.length * abs_transform.scale.x;
-				res.breadth = self.breadth * abs_transform.scale.y;
-				break;
-		}
-
-		return res;
-	}
-	self.get_real_dimensions = get_real_dimensions;
+	self.get_real_dimensions = Utility.get_real_dimensions(self, params);
 
 	Physics_World.Instance.add_obj(self);
 

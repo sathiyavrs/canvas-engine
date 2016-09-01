@@ -26,6 +26,7 @@ function reqAnimCb(timeStamp)
 
 	clearCanvas();
 	update(dt);
+	draw();
 
 	window.requestAnimationFrame(reqAnimCb);
 }
@@ -45,9 +46,16 @@ function basic_physics_test()
 		scale: new Vector(1, 1)	
 	});
 
+	var point = new Game_Object({
+		parent: scene,
+		position: new Vector(0, 0),
+		rotation: 0,
+		scale: new Vector(1, 1)	
+	});
+
 	var ball_2 = new Game_Object({
 		parent: ball_1,
-		position: new Vector(11, 0),
+		position: new Vector(20, 0),
 		rotation: 0,
 		scale: new Vector(1, 1)	
 	});
@@ -62,20 +70,19 @@ function basic_physics_test()
 
 	ball_1.add_physics_cb_script(function cb(other) {
 		console.log("Collision detected by ball of id " + ball_1.id);	
-		console.log(other.transform.position);
-		console.log(other.get_absolute_transform().position);
-		console.log(other.parent);
 	});
 
 	ball_2.add_physics_cb_script(function cb(other) {
 		console.log("Collision detected by ball of id " + ball_2.id);	
-		console.log(other.transform.position);
-		console.log(other.get_absolute_transform().position);
 	});
+
+	ball_1.add_canvas_renderer(physics_params);
+	ball_2.add_canvas_renderer(physics_params);
 }
 
 function init()
 {
+	basic_physics_test();
 	scene.start();
 }
 
@@ -83,6 +90,11 @@ function update(dt)
 {
 	scene.update(dt);
 	Physics_World.Instance.check_collisions();
+}
+
+function draw()
+{
+	scene.draw();
 }
 
 window.requestAnimationFrame(reqAnimCb);
