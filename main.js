@@ -25,7 +25,7 @@ function reqAnimCb(timeStamp)
 	}
 
 	clearCanvas();
-	update(dt);
+	update(dt / 1000);
 	draw();
 
 	window.requestAnimationFrame(reqAnimCb);
@@ -80,9 +80,84 @@ function basic_physics_test()
 	ball_2.add_canvas_renderer(physics_params);
 }
 
+function basic_script_test()
+{
+	var obj = new Game_Object({
+		parent: scene,
+		position: new Vector(5, 0),
+		rotation: 0,
+		scale: new Vector(0.7, 1)	
+	});
+
+	obj.add_canvas_renderer({
+		shape: 'circle',
+		radius: 10
+	});
+
+	obj.add_script({
+		speed: 200,
+		distance_limit: 100,
+		init_pos: new Vector(0, 0),
+		dir: Vector.left(),
+
+		start: function(game_object) {
+			this.init_pos.assign(game_object.transform.position);
+		},
+
+		update: function(game_object, dt) {
+			var dir = this.dir;
+			var init_pos = this.init_pos;
+			var distance_limit = this.distance_limit;
+			var speed = this.speed;
+
+			var delta_movement = new Vector(dir.x * dt * speed, dir.y * dt * speed);
+			game_object.transform.position.add(delta_movement);
+
+			if (Vector.distance_squared(game_object.transform.position, init_pos) > distance_limit * distance_limit)
+				reverse_direction();
+
+			if (Vector.distance_squared(game_object.transform.position, init_pos) < 1)
+				change_direction();
+
+			function reverse_direction()
+			{
+				dir.x *= -1;
+				dir.y *= -1;
+			}
+			
+			function change_direction()
+			{
+				dir.x = Math.random() * 2 - 1;
+				dir.y = Math.random() * 2 - 1;
+			}
+
+			debug_draw({
+				type: 'line',
+				start: init_pos,
+				end: game_object.transform.position
+			});
+
+			debug_draw({
+				type: 'circle',
+				center: init_pos,
+				radius: 10,
+				fill: true
+			});
+
+			debug_draw({
+				type: 'circle',
+				center: init_pos,
+				radius: distance_limit + game_object.renderer.radius,
+				fill: false
+			});
+		}
+	});
+
+}
+
 function init()
 {
-	basic_physics_test();
+	basic_script_test();
 	scene.start();
 }
 

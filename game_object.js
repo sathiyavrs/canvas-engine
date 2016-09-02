@@ -82,7 +82,7 @@ function Game_Object(params)
 	function add_script(script, tag)
 	{
 		script.tag = tag;
-		script_add.push(script);
+		script_arr.push(script);
 	}
 	self.add_script = add_script;
 	make_property_non_writable('add_script');
@@ -140,7 +140,7 @@ function Game_Object(params)
 	{
 		script_arr.forEach(function(script) {
 			if (script.start)
-				script.start();	
+				script.start(self);	
 		});
 
 		self.child_arr.forEach(function(child) {
@@ -154,7 +154,7 @@ function Game_Object(params)
 	{
 		script_arr.forEach(function(script) {
 			if (script.update)
-				script.update(dt);	
+				script.update(self, dt);	
 		});
 
 		self.child_arr.forEach(function(child) {

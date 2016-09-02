@@ -98,6 +98,15 @@ Vector.right = function()
 	return new Vector(1, 0);
 }
 
+Vector.distance_squared = function(a, b)
+{
+	function square(x)
+	{
+		return x * x;
+	}
+	return square(a.x - b.x) + square(a.y - b.y);
+}
+
 function freeze_vector()
 {
 	for (var property in Vector)
