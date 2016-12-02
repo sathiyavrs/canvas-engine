@@ -9,6 +9,10 @@ var game_obj_arr = [];
  *
  * Game Objects in most games form a tree-like structure. During rendering, for instance, the pre-order traversal of the tree is the rendering order.
  * While I probably won't be doing that, I'll be incorporating a parent-child model to manifest the idea of the tree structure.
+ *
+ * TODO: Add kill functionality
+ * TODO: Think about removing game_obj_arr
+ * TODO: Remove physics object
  */
 function Game_Object(params)
 {
@@ -35,6 +39,7 @@ function Game_Object(params)
 		self.child_arr = [];
 	}
 	parent_child_constructor();
+	game_obj_arr.push(self);
 
 	function attach_child(game_object)
 	{
@@ -48,6 +53,137 @@ function Game_Object(params)
 	}
 	self.attach_child = attach_child;
 	make_property_non_writable('attach_child');
+
+	/*
+	 * Kill functionality. Call game_object.kill() to kill the game_object.
+	 *
+	 * Will search the list for the game_object by id, and remove it from the list. O(n) operation
+	 */
+
+	function kill_child(game_object)
+	{
+		if (game_object.parent.id != self.id)
+			return;
+
+		var index = -1;
+		for (var i = 0; i < self.child_arr.length; i++)
+			if (game_object.id == self.child_arr[i].id)
+				index = i;
+		
+		if (index < 0)
+			return;
+
+		self.child_arr.splice(index, 1);
+
+		game_object.kill();
+	}
+	self.kill_child = kill_child;
+	make_property_non_writable('kill_child');
+
+	function kill_all_children()
+	{
+		while (self.child_arr.length > 0)
+			kill_child(self.child_arr[0]);
+	}
+
+	function kill()
+	{
+		if (self.parent.id != self.id)
+			self.parent.kill_child(self);
+
+		if (self.child_arr.length != 0)
+			kill_all_children();
+
+		if (self.physics_object)
+			self.physics_object.kill();
+
+		var index = -1;
+		for (var i = 0; i < game_obj_arr.length; i++)
+			if (game_obj_arr[i].id == self.id)
+				index = i;
+
+		if (index < 0)
+			return;
+
+		game_obj_arr.splice(index, 1);
+	}
+	self.kill = kill;
+	// make_property_non_writable('kill');
+	
+	function detach_child(game_object)
+	{
+		var index = -1;
+		for (var i = 0; i < self.child_arr.length; i++)
+			if (self.child_arr[i].id == game_object.id)
+				index = i;
+
+		if (index < 0)
+			return;
+
+		self.child_arr.splice(index, 1);
+	}
+	self.detach_child = detach_child;
+	make_property_non_writable('detach_child');
+
+	/*
+	 * TODO: Optimize
+	 */
+	function kill_alternate()
+	{
+		var id_arr = [];
+
+		function push_ids(game_object, id_arr)
+		{
+			id_arr.push(game_object.id);
+			game_object.child_arr.forEach(function(obj) {
+				push_ids(obj, id_arr);	
+			});
+		}
+
+		push_ids(self, id_arr);
+
+		var index_arr = [];
+		var new_arr = [];
+		var bad_id = false;
+
+		for (var i = 0; i < id_arr.length; i++)
+			index_arr.push(-1);
+
+		/*
+		 * TODO: Optimize to O(n * log(n)), by sorting and binary search
+		 */
+		for (var i = 0; i < game_obj_arr.length; i++)
+		{
+			bad_id = false;
+			for (var j = 0; j < index_arr.length; j++)
+			{
+				if (id_arr[j] == game_obj_arr[i].id)
+				{
+					bad_id = true;
+					index_arr[j] = i;
+
+					// TODO: Decide necessity of next line
+					// game_obj_arr[i].parent.detach_child(game_obj_arr[i]);
+					
+					if (game_obj_arr[i].physics_object)
+						game_obj_arr[i].physics_object.kill();
+				}
+			}
+
+			if (!bad_id)
+				new_arr.push(game_obj_arr[i]);
+		}
+
+		game_obj_arr = new_arr;
+
+		self.parent.detach_child(self);
+	}
+	self.kill = kill_alternate;
+	make_property_non_writable('kill');
+
+	/*
+	 * Utility stuff
+	 */
 
 	function get_absolute_transform()
 	{
@@ -69,8 +205,6 @@ function Game_Object(params)
 	self.get_absolute_transform = get_absolute_transform;
 	make_property_non_writable('get_absolute_transform');
 
-	game_obj_arr.push(self);
-
 	/*
 	 * Alright, now for the script system.
 	 *
@@ -78,11 +212,14 @@ function Game_Object(params)
 	 * The order of execution of the scripts is FIFO.
 	 */
 	var script_arr = [];
+	var script_started_arr = [];
 
 	function add_script(script, tag)
 	{
-		script.tag = tag;
+		if (tag)
+			script.tag = tag;
 		script_arr.push(script);
+		script_started_arr.push(false);
 	}
 	self.add_script = add_script;
 	make_property_non_writable('add_script');
@@ -132,19 +269,26 @@ function Game_Object(params)
 	self.run_physics_cb = run_physics_cb;
 
 	/*
+	 * TODO: Fix hack in start. The bug involves the start function never being fired off because the script was added after scene.start(). Consequently, the start method is never called, as scene.start() is never called.
+	 * Hack involves a new array that indicates if a script has been started: script_started_arr
+	 *
 	 * Start and Update methods are standard in most game engines.
 	 *
 	 * Update takes in delta_time as a parameter.
 	 */
+	
 	function start()
 	{
-		script_arr.forEach(function(script) {
+		script_arr.forEach(function(script, index) {
 			if (script.start)
+			{
 				script.start(self);	
+				script_started_arr[index] = true;
+			}
 		});
 
 		self.child_arr.forEach(function(child) {
-			child.start();	
+			child.start();
 		});
 	}
 	self.start = start;
@@ -152,7 +296,14 @@ function Game_Object(params)
 
 	function update(dt)
 	{
-		script_arr.forEach(function(script) {
+		script_arr.forEach(function(script, index) {
+			if (!script_started_arr[index] && script.start)
+			{
+				script.start(self);	
+				script_started_arr[index] = true;
+				return;
+			}
+
 			if (script.update)
 				script.update(self, dt);	
 		});

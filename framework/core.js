@@ -3,6 +3,9 @@
  * Convenience is more important than rigidity 
  */
 
+/*
+ * Vector is was originally thought up to be a rough equivalent of the Vector2D class in Unity.
+ */
 function Vector(x, y)
 {
 	if (typeof(x) != "number" || typeof(y) != "number")
@@ -46,6 +49,25 @@ function Vector(x, y)
 		self.y = a.y;
 	}
 	self.assign = assign;
+
+	function magnitude()
+	{
+		return Math.sqrt(self.x * self.x + self.y * self.y);
+	}
+	self.magnitude = magnitude;
+
+	/*
+	 * Same direction vector, make magnitude one
+	 */
+	function normalize()
+	{
+		var sin_val = self.y / self.magnitude();
+		var cos_val = self.x / self.magnitude();
+
+		self.x = cos_val;
+		self.y = sin_val;
+	}
+	self.normalize = normalize;
 
 	Object.seal(self);
 
@@ -107,6 +129,9 @@ Vector.distance_squared = function(a, b)
 	return square(a.x - b.x) + square(a.y - b.y);
 }
 
+/*
+ * Deep-Freezing the Vector class to ensure nobody can redeclare certain required functions indirectly.
+ */
 function freeze_vector()
 {
 	for (var property in Vector)
@@ -115,6 +140,7 @@ function freeze_vector()
 	
 	Object.freeze(Vector);
 }
+freeze_vector();
 
 function Transform(params)
 {
@@ -149,10 +175,4 @@ function freeze_transform()
 {
 	Object.freeze(Transform);
 }
-
-function freeze_core_globals()
-{
-	freeze_vector();
-	freeze_transform();
-}
-freeze_core_globals();
+freeze_transform();

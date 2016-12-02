@@ -1,42 +1,3 @@
-var ctx = (document.getElementById('canvas_id')).getContext("2d");
-
-var lineCount = 0;
-var prevTime = -1;
-var dt;
-
-function clearCanvas()
-{
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-}
-
-function reqAnimCb(timeStamp)
-{
-	if (prevTime == -1)
-	{
-		init();
-		prevTime = timeStamp;
-		window.requestAnimationFrame(reqAnimCb);
-		return;
-	}
-	else
-	{
-		dt = timeStamp - prevTime;
-		prevTime = timeStamp;
-	}
-
-	clearCanvas();
-	update(dt / 1000);
-	draw();
-
-	window.requestAnimationFrame(reqAnimCb);
-}
-
-var scene = new Game_Object({
-	position: new Vector(0, 0),
-	rotation: 0,
-	scale: new Vector(1, 1)	
-});
-
 function basic_physics_test()
 {
 	var ball_1 = new Game_Object({
@@ -268,21 +229,121 @@ function new_script()
 	});
 }
 
-function init()
+function kill_test()
 {
-	particle_test();
-	scene.start();
+	var obj = new Game_Object({
+		parent: scene,
+		position: new Vector(0, 0),
+		rotation: 0,
+		scale: new Vector(1, 1)
+	});
+
+	var params = {
+		shape: 'circle',
+		radius: 10
+	};
+
+	obj.add_canvas_renderer(params);
+	obj.add_physics_component(params);
+	obj.add_physics_cb_script(function cb(other) {
+		obj.kill();
+		console.log("HEYO");
+	})
+
+	var obj_2 = new Game_Object({
+		parent: scene,
+		position: new Vector(100, 0),
+		rotation: 0,
+		scale: new Vector(1, 1)	
+	});
+
+	obj_2.add_canvas_renderer(params);
+	obj_2.add_physics_component(params);
+
+	obj_2.add_script({
+		speed: 100,
+
+		update: function(game_object, dt) {
+			var delta_movement = new Vector(this.speed * -1 * dt, 0);
+			game_object.transform.position.add(delta_movement);
+
+			if (game_object.transform.position.x < -100)
+				game_object.kill();
+		}
+	});
 }
 
-function update(dt)
+function particle_test()
 {
-	scene.update(dt);
-	Physics_World.Instance.check_collisions();
-}
+	var particle_root = new Game_Object({
+		parent: scene,
+		position: new Vector(0, 200),
+		rotation: 0,
+		scale: new Vector(1, 1)
+	});
 
-function draw()
-{
-	scene.draw();
-}
+	var x_disp = 60,
+		y_disp = 30;
 
-window.requestAnimationFrame(reqAnimCb);
+	var particle_script = {
+		speed: 100,
+		dir: Vector.down(),
+		lower_y: -200,
+		directional_multiplier: 4,
+
+		start: function(game_object) {
+			// console.log("sup");
+		},
+
+		update: function(game_object, dt) {
+			this.dir.x = Math.random() * this.directional_multiplier - this.directional_multiplier / 2;
+			this.dir.normalize();
+
+			var speed = this.speed;
+			var dir = this.dir;
+			var lower_y = this.lower_y;
+
+			var delta_movement = new Vector(dt * speed * dir.x, dt * speed * dir.y);
+			game_object.transform.position.add(delta_movement);
+
+			if (game_object.get_absolute_transform().position.y < lower_y)
+				game_object.kill();
+
+			debug_draw({
+				type: 'line',
+				start: new Vector(-100, lower_y),
+				end: new Vector(100, lower_y)
+			});
+		}
+	};
+
+	var root_script = {
+		rate: 0.1,
+		prev_time: 0,
+
+		update: function(game_object, dt) {
+			this.prev_time += dt;
+			if (this.prev_time < this.rate)
+				return;
+			
+			this.prev_time = 0;
+			var obj = { };
+			obj = new Game_Object({
+				parent: game_object,
+				position: new Vector(0, 0),
+				rotation: 0,
+				scale: new Vector(1, 1)	
+			});
+
+			obj.add_canvas_renderer({
+				shape: 'circle',
+				radius: 2,
+				color: '009990'	
+			});
+
+			obj.add_script(particle_script);
+		}
+	};
+
+	particle_root.add_script(root_script);
+}

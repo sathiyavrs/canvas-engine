@@ -29,7 +29,7 @@ function Physics_World()
 
 		obj_arr.splice(index, 1);
 	}
-	self.add_obj = add_obj;
+	self.remove_obj = remove_obj;
 
 	/*
 	 * Right now, make do with O(n^2) check
@@ -129,6 +129,8 @@ function Physics_Object(params)
 	function kill()
 	{
 		Physics_World.Instance.remove_obj(self);
+
+		console.log("Physics object removal");
 	}
 	self.kill = kill;
 
